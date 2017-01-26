@@ -1,0 +1,50 @@
+[
+    {
+        "form_slug": "esr-womens-health",
+        "custom_name": "EV16_ESR_TYNE_ROTATION_2",
+        "module_code": 78,
+        "open": "2016-10-03T00:00:00",
+        "type_name": "End of stage",
+        "study_id": "41",
+        "field_api": "/forms/api/fields/215/?format=json",
+        "close": "2016-10-28T00:00:00",
+        "type": 1,
+        "name": "ESR - Womens Health"
+    },
+    {
+        "form_slug": "primary-care-eval",
+        "custom_name": "EV16_ESR_TYNE_ROTATION_3",
+        "module_code": 76,
+        "open": "2016-07-27T00:00:00",
+        "type_name": "End of stage",
+        "study_id": "5",
+        "field_api": "/forms/api/fields/208/?format=json",
+        "close": "2016-11-18T00:00:00",
+        "type": 1,
+        "name": "ESR - Primary Care"
+    },
+    {
+        "form_slug": "esr---child-health-evaluation",
+        "custom_name": "EV16_ESR_TYNE_ROTATION_4",
+        "module_code": 68,
+        "open": "2016-11-20T00:00:00",
+        "type_name": "End of stage",
+        "study_id": "39",
+        "field_api": "/forms/api/fields/125/?format=json",
+        "close": "2016-12-02T00:00:00",
+        "type": 1,
+        "name": "ESR - Child Health"
+    },
+    {
+        "form_slug": "hbp-test",
+        "custom_name": "EV16_ESR_TYNE_HBP_ROTATION_1",
+        "module_code": null,
+        "open": "2017-04-24T00:00:00",
+        "type_name": "End of stage",
+        "study_id": "12",
+        "field_api": "/forms/api/fields/182/?format=json",
+        "close": "2017-05-19T00:00:00",
+        "type": 1,
+        "name": "Hospital Based Practice"
+    }
+]

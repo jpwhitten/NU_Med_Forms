@@ -1,0 +1,51 @@
+[
+    {
+        "label": "Single line text",
+        "field_type": 1,
+        "choices": "",
+        "text_field_type": "Single line text",
+        "order": 1
+    },
+    {
+        "label": "Multi line text",
+        "field_type": 2,
+        "choices": "",
+        "text_field_type": "Multi line text",
+        "order": 2
+    },
+    {
+        "label": "Check box",
+        "field_type": 4,
+        "choices": "No::No,Yes::Yes",
+        "text_field_type": "Check box",
+        "order": 3
+    },
+    {
+        "label": "Drop down",
+        "field_type": 6,
+        "choices": "sat::sat,mon::mon,fri::fri,sun::sun,tues::tues,thur::thur,wed::wed",
+        "text_field_type": "Drop down",
+        "order": 4
+    },
+    {
+        "label": "Multi select",
+        "field_type": 7,
+        "choices": "2::Second,3::Third,1::First,4::Fourth",
+        "text_field_type": "Multi select",
+        "order": 5
+    },
+    {
+        "label": "Radio buttons",
+        "field_type": 8,
+        "choices": "Not Applicable::Not Applicable,Very poor::Very poor,Very good::Very good,Poor::Poor,Good::Good,Neither good nor poor::Neither good nor poor",
+        "text_field_type": "Radio buttons",
+        "order": 6
+    },
+    {
+        "label": "Date",
+        "field_type": 10,
+        "choices": "",
+        "text_field_type": "Date",
+        "order": 7
+    }
+]
