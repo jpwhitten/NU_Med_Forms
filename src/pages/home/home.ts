@@ -8,6 +8,8 @@ import { Storage } from '@ionic/storage';
 import { Data } from '../../providers/data';
 import { FormViewPage } from '../form-view/form-view'
 import { Network } from "ionic-native";
+import { Restriction } from '../../providers/restriction'
+
 
 
 @Component({
@@ -203,6 +205,19 @@ export class HomePage {
           });
         }
 
+        var restrictionArray: Restriction[] = [];
+        var restrictions = this.questionItems[i].restrictions;
+
+        for (var k = 0; k < this.questionItems[i].restrictions.length; k++) {
+
+          var restriction = new Restriction(restrictions[k].condition,
+            restrictions[k].logic.action,
+            restrictions[k].option,
+            restrictions[k].logic.object_id)
+
+          restrictionArray.push(restriction);
+        }
+
         //Set up for multiple select checkboxes (need an array slot for each checkbox where its state is stored)
         if (this.questionItems[i].field_type === 4) {
           var answerArray: boolean[] = new Array(splitChoiceValues.length);
@@ -220,7 +235,8 @@ export class HomePage {
             submissionID: null,
             answer: answerArray,
             hasValidAnswer: false,
-            isDirty: false
+            isDirty: false,
+            restrictions: null
           });
 
         } else {
@@ -235,7 +251,8 @@ export class HomePage {
             submissionID: null,
             answer: null,
             hasValidAnswer: false,
-            isDirty: false
+            isDirty: false,
+            restrictions: null
           });
 
         }

@@ -208,7 +208,7 @@ export class FormViewPage {
 
     var invalidAnswers = "Invalid Answers: "
     for (var i = 0; i < this.form.questions.length; i++) {
-      if (this.isInvalidAnswer(i)) {
+      if (!this.form.questions[i].hasValidAnswer) {
         invalidAnswers = invalidAnswers.concat(i + ", ")
       }
 

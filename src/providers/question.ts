@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
-import { ChoiceValues } from '../providers/choice-values'
+import { ChoiceValues } from '../providers/choice-values';
+import { Restriction } from '../providers/restriction'
 import 'rxjs/add/operator/map';
 
 /*
@@ -20,7 +21,8 @@ export class Question {
               public submissionID: String,
               public answer: any[],
               public hasValidAnswer: boolean,
-              public isDirty: boolean) {
+              public isDirty: boolean,
+              public restrictions: Restriction[]) {
 
     
   }
