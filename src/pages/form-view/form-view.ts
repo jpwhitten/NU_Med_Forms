@@ -6,6 +6,8 @@ import { Form } from '../../providers/form';
 import { Question } from '../../providers/question';
 import { Camera } from 'ionic-native';
 import { Network } from "ionic-native";
+import { HomePage } from '../home/home'
+
 
 /*
   Generated class for the FormView page.
@@ -43,7 +45,7 @@ export class FormViewPage {
   public invalidAnswers: string = "";
 
   //Class constructor.
-  constructor(private navCtrl: NavController,
+  constructor(private nav: NavController,
     private navParams: NavParams,
     private http: Http) {
 
@@ -223,8 +225,13 @@ export class FormViewPage {
 
   //Submit the form only if their are valid answers to each question.
   submitForm() {
-    if (this.formSlides.valid) {
+    if (this.formSlides.valid && this.isOnline()) {
       this.sendForm();
+    } else if (this.formSlides.valid && !this.isOnline()) {
+      this.form.submissionStatus = "QUEUED"
+       this.nav.push(HomePage, {
+        form: this.form
+      });
     } else {
       for (var i = 0; i < this.form.questions.length; i++) {
         var questionID = this.form.questions[i].id;
@@ -423,6 +430,10 @@ export class FormViewPage {
     }, (err) => {
       console.log(err);
     });
+  }
+
+  isOnline() {
+    return false
   }
 
 }

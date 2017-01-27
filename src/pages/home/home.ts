@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, Platform, AlertController } from 'ionic-angular';
+import { NavController, NavParams, Platform, AlertController } from 'ionic-angular';
 import { Http, Headers, Jsonp } from '@angular/http';
 import { Form } from '../../providers/form';
 import { Question } from '../../providers/question';
@@ -26,13 +26,15 @@ export class HomePage {
   savedForms: any = false;
   public SERVER_NUMBER = '8000';
 
+  queuedForm: Form;
+
   constructor(public nav: NavController,
     private http: Http,
     private navCtrl: NavController,
     public dataService: Data,
     private platform: Platform,
+    private navParams: NavParams,
     private alertController: AlertController) {
-
 
     //Check local stoage for any saved forms.
     this.local = new Storage();
@@ -42,12 +44,20 @@ export class HomePage {
         this.savedForms = JSON.parse(forms);
       }
 
-      //For each saved form push the form to the array of forms to be presented.
+      if(this.navParams.get('form') != null) {
+        this.queuedForm = this.navParams.get('form');   
+        console.log(this.queuedForm);
+
+        //For each saved form push the form to the array of forms to be presented.
       if (forms) {
         this.savedForms.forEach((savedForm) => {
 
-          //Temporary form.
-          let loadForm = new Form(savedForm.id,
+          let loadForm;
+
+          if(savedForm.id != this.queuedForm.id) {
+
+             //Temporary form.
+            loadForm = new Form(savedForm.id,
             savedForm.label,
             savedForm.formSlug,
             savedForm.customName,
@@ -65,6 +75,13 @@ export class HomePage {
 
           loadForm.hasStarted = savedForm.hasStarted;
 
+
+          } else {
+
+            loadForm = this.queuedForm;
+
+          }
+         
           //Push temporary form.                         
           this.forms.push(loadForm);
 
@@ -76,8 +93,39 @@ export class HomePage {
 
         })
       }
+    
+      } else {
+        
+         if (forms) {
+        this.savedForms.forEach((savedForm) => {
+
+          let loadForm;
+
+             //Temporary form.
+            loadForm = new Form(savedForm.id,
+            savedForm.label,
+            savedForm.formSlug,
+            savedForm.customName,
+            savedForm.moduleCode,
+            savedForm.open,
+            savedForm.typeName,
+            savedForm.studyID,
+            savedForm.fieldAPI,
+            savedForm.close,
+            savedForm.type,
+            savedForm.academicYear,
+            savedForm.userProfile,
+            savedForm.questions,
+            savedForm.submissionStatus);
+
+          loadForm.hasStarted = savedForm.hasStarted;
+        });
+      }
+      }
 
       this.getForms();
+
+      
 
     })
 
