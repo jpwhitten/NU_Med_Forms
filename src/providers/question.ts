@@ -13,18 +13,24 @@ import 'rxjs/add/operator/map';
 export class Question {
 
   constructor(public id: string,
-              public label:string, 
-              public fieldType: number, 
-              public choices: ChoiceValues[], 
-              public textFieldType: string, 
-              public order: number, 
-              public submissionID: String,
-              public answer: any[],
-              public hasValidAnswer: boolean,
-              public isDirty: boolean,
-              public restrictions: Restriction[]) {
+    public label: string,
+    public fieldType: number,
+    public choices: ChoiceValues[],
+    public textFieldType: string,
+    public order: number,
+    public submissionID: String,
+    public answer: any[],
+    public hasValidAnswer: boolean,
+    public isDirty: boolean,
+    public restrictions: Restriction[]) {
 
-    
+
   }
+
+
+  hasRestrictions(): boolean {
+    return this.restrictions.length != 0;
+  }
+
 
 }

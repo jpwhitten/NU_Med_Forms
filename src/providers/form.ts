@@ -78,6 +78,50 @@ export class Form {
     return this.questions.length;
   }
 
+  findQuestion(id): Question {
+    for(var question in this.questions) {
+      if(id == this.questions[question].id) {
+        return this.questions[question];
+      }
+    }
+  }
+
+  isQuestionRestricted(id): boolean {
+    for(var question in this.questions) {
+      if(this.questions[question].restrictions.length != 0) {
+        for(var restriction in this.questions[question].restrictions) {
+          if(this.questions[question].restrictions[restriction].objectid == id) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  isQuestionRestrictedAndShouldHide(id):boolean {
+    for(var question in this.questions) {
+      if(this.questions[question].restrictions.length != 0) {
+        for(var restriction in this.questions[question].restrictions) {
+          if(this.questions[question].restrictions[restriction].objectid == id) {
+            return this.questions[question].restrictions[restriction].action == "show";
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  getRestrictingQuestion(id): Question {
+    for(var question in this.questions) {
+      for(var restriction in this.questions[question].restrictions) {
+        if(this.questions[question].restrictions[restriction].objectid == id) {
+         return this.findQuestion(this.questions[question].id);
+        }
+      }
+    }
+  }
+
   saveForm(): void {
 
      this.formObserver.next(true);

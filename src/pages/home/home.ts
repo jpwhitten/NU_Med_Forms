@@ -225,35 +225,35 @@ export class HomePage {
             answerArray[i] = false;
           }
 
-          questions.push({
-            id: this.questionItems[i].id,
-            label: this.questionItems[i].label,
-            fieldType: this.questionItems[i].field_type,
-            choices: splitChoiceValues,
-            textFieldType: this.questionItems[i].text_field_type,
-            order: this.questionItems[i].order,
-            submissionID: null,
-            answer: answerArray,
-            hasValidAnswer: false,
-            isDirty: false,
-            restrictions: null
-          });
+          questions.push(new Question(
+            this.questionItems[i].id,
+            this.questionItems[i].label,
+            this.questionItems[i].field_type,
+            splitChoiceValues,
+            this.questionItems[i].text_field_type,
+            this.questionItems[i].order,
+            null,
+            answerArray,
+            false,
+            false,
+            restrictionArray
+          ));
 
         } else {
           //Set up for other questions.
-          questions.push({
-            id: this.questionItems[i].id,
-            label: this.questionItems[i].label,
-            fieldType: this.questionItems[i].field_type,
-            choices: splitChoiceValues,
-            textFieldType: this.questionItems[i].text_field_type,
-            order: this.questionItems[i].order,
-            submissionID: null,
-            answer: null,
-            hasValidAnswer: false,
-            isDirty: false,
-            restrictions: null
-          });
+          questions.push(new Question(
+            this.questionItems[i].id,
+            this.questionItems[i].label,
+            this.questionItems[i].field_type,
+            splitChoiceValues,
+            this.questionItems[i].text_field_type,
+            this.questionItems[i].order,
+            null,
+            null,
+            false,
+            false,
+            restrictionArray
+          ));
 
         }
 

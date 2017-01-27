@@ -19660,3 +19660,11 @@ page-form-view .btn-invalid {
 page-form-view .btn-valid {
   background-color: lightgreen;
 }
+
+page-form-view .restricted-question-hidden {
+  display: none;
+}
+
+page-form-view .restricted-question-show {
+  display: block;
+}

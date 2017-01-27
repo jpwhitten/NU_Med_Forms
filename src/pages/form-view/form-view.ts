@@ -1,8 +1,9 @@
 import { Component, ViewChild } from '@angular/core';
 import { NavController, NavParams, Slides } from 'ionic-angular';
 import { Http, Jsonp, Headers } from '@angular/http';
-import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn } from '@angular/forms';
 import { Form } from '../../providers/form';
+import { Question } from '../../providers/question';
 import { Camera } from 'ionic-native';
 import { Network } from "ionic-native";
 
@@ -37,7 +38,7 @@ export class FormViewPage {
   public formSlides: FormGroup;
   //Form builder.
   public formBuilder: FormBuilder = new FormBuilder();
-  
+
   //Current invalid answers.
   public invalidAnswers: string = "";
 
@@ -48,7 +49,7 @@ export class FormViewPage {
 
 
 
-      if (Network.connection != "none") {
+    if (Network.connection != "none") {
       this.connection = "Online";
     } else {
       this.connection = "Offline";
@@ -82,9 +83,9 @@ export class FormViewPage {
 
     //Dynamically map each question (based on question type (more paramaters could be passed to generate dynamic Validators using custom functions)).
     for (var i = 0; i < this.form.questions.length; i++) {
-      
+
       var questionType = this.form.questions[i].fieldType;
-      
+
       if (questionType == 1) { //Single line input.
 
         validationMap[this.form.questions[i].id] = ['', Validators.compose([Validators.minLength(10), Validators.pattern('[a-zA-Z]*'), Validators.required])];
@@ -139,6 +140,78 @@ export class FormViewPage {
 
     console.log(this.form.questions[i])
 
+  }
+
+   validateCustom2(id) {
+     console.log("id" + id);
+      var question = this.form.findQuestion(id);
+      console.log(question);
+      if(question.restrictions.length != 0) {
+        for(var restriction in question.restrictions) {
+        var restrictedQuestion = this.form.findQuestion(question.restrictions[restriction].objectid);
+        console.log(restrictedQuestion);
+        console.log(restrictedQuestion.id);
+        console.log(question.answer.toString());
+        console.log(question.restrictions[restriction].option)   ;     
+        if(question.answer.toString() == question.restrictions[restriction].option) {
+
+
+            var questionType = this.form.findQuestion(id).fieldType;
+            var validation: ValidatorFn = Validators.compose([Validators.required]);
+
+            if (questionType == 1) { //Single line input.
+
+              validation = Validators.compose([Validators.minLength(10), Validators.pattern('[a-zA-Z]*'), Validators.required]);
+
+            } else if (questionType == 2) { //TextArea.
+
+              validation = Validators.compose([Validators.minLength(10), Validators.pattern('[a-zA-Z]*'), Validators.required]);
+
+            } else if (questionType == 4) { //Checkbox.
+
+              validation = Validators.compose([Validators.required]);
+
+            } else if (questionType == 6) { //Select.
+
+              validation = Validators.compose([Validators.required]);
+
+            } else if (questionType == 7) { //Multplie Select.
+
+              validation = Validators.compose([Validators.required]);
+
+            } else if (questionType == 10) { //DateTime.
+
+              validation = Validators.compose([Validators.required]);
+
+            } else if (questionType == 15 || questionType == 8) { //Radio.
+
+              validation = Validators.compose([Validators.required, Validators.pattern('[A-Za-z]*')]);
+
+            }
+            this.getQuestionValidationStateForID(restrictedQuestion.id).setValidators(validation);
+            console.log(this.getQuestionValidationStateForID(restrictedQuestion.id).valid)
+            if(restrictedQuestion.answer != null) {
+                restrictedQuestion.hasValidAnswer = this.getQuestionValidationStateForID(restrictedQuestion.id).valid;
+            } else {
+                restrictedQuestion.hasValidAnswer = false;
+            }
+            console.log( restrictedQuestion.hasValidAnswer);
+        
+      } else {
+
+        this.getQuestionValidationStateForID(restrictedQuestion.id).setValidators(Validators.minLength(-1));
+        console.log(this.getQuestionValidationStateForID(restrictedQuestion.id).valid)
+        restrictedQuestion.hasValidAnswer = this.getQuestionValidationStateForID(restrictedQuestion.id).valid;
+        
+      }
+
+          
+      } 
+      } 
+  }
+
+  static passValidation(): ValidatorFn {
+    return null;
   }
 
   //Skip to question i.
@@ -223,13 +296,19 @@ export class FormViewPage {
    */
   answerQuestion(i) {
 
+    
+
     console.log("question answer valid?" + this.form.questions[i].hasValidAnswer)
     this.form.questions[i].hasValidAnswer = this.getQuestionValidationState(i).valid;
     if (!this.form.questions[i].isDirty) {
       this.form.questions[i].isDirty = this.getQuestionValidationState(i).dirty;
     }
 
-    this.form.answerQuestion();
+     setTimeout(() => {
+        var questionID = this.form.questions[i].id
+        this.validateCustom2(questionID);
+      }, 0);
+    
 
   }
 
@@ -241,6 +320,17 @@ export class FormViewPage {
     var questionID = this.form.questions[i].id;
     return this.formSlides.get(questionID.toString());
 
+  }
+
+  getQuestionValidationStateForID(id) {
+
+    for (var question in this.form.questions) {
+      if (this.form.questions[question].id == id) {
+        var questionID = this.form.questions[question].id;
+        return this.formSlides.get(questionID.toString());
+      }
+    }
+    return null;
   }
 
   /**
@@ -283,7 +373,7 @@ export class FormViewPage {
           console.log({ value: this.form.questions[i].answer, form_submission_id: this.form.questions[i].submissionID, form_field_id: this.form.questions[i].id });
           this.http.post(siteUrl + valUrl, JSON.stringify({ value: this.form.questions[i].answer, form_submission_id: this.form.questions[i].submissionID, form_field_id: this.form.questions[i].id }), { headers: headers }).subscribe(data => {
             var result = data.json();
-            
+
             //If post was successful.
             if (result.result) {
               console.log("added Values");
@@ -291,9 +381,9 @@ export class FormViewPage {
               //Delete submission upon failure.
               console.log("failed to add values");
               this.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
-              var deleteresult = data.json();
-              console.log(deleteresult);
-            });
+                var deleteresult = data.json();
+                console.log(deleteresult);
+              });
             }
           });
           //Delete (Here to simulate transaction failure) ------------------------------------

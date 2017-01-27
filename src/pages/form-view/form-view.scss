@@ -8,5 +8,13 @@ page-form-view {
         background-color: lightgreen;
     }
 
+    .restricted-question-hidden {
+        display: none;
+    }
+
+    .restricted-question-show {
+        display: block;
+    }
+
 
 }
