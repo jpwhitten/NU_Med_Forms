@@ -42,6 +42,7 @@ export class HomePage {
 
       if (typeof (forms) != "undefined") {
         this.savedForms = JSON.parse(forms);
+        console.log(this.savedForms)
       }
 
       if(this.navParams.get('form') != null) {
@@ -84,11 +85,13 @@ export class HomePage {
          
           //Push temporary form.                         
           this.forms.push(loadForm);
+          console.log(this.forms)
 
           loadForm.form.subscribe(update => {
             this.save();
           })
 
+         
 
 
         })
@@ -119,10 +122,24 @@ export class HomePage {
             savedForm.submissionStatus);
 
           loadForm.hasStarted = savedForm.hasStarted;
+
+          //Push temporary form.                         
+          this.forms.push(loadForm);
+          console.log(this.forms)
+
+          loadForm.form.subscribe(update => {
+            this.save();
+          })
+
+         
+
         });
       }
+
+
       }
 
+      this.sendQueuedForms();
       this.getForms();
 
       
@@ -131,6 +148,7 @@ export class HomePage {
 
     if (Network.connection != "none") {
       this.connection = "Online";
+      this.sendQueuedForms();
     } else {
       this.connection = "Offline";
     }
@@ -149,11 +167,88 @@ export class HomePage {
           console.log("online: " + Network.connection);
           this.connection = "online";
           this.getForms();
+          this.sendQueuedForms();
         }
       }, 3000);
     });
 
   }
+
+  sendQueuedForms() {
+    for(var i = 0; i < this.forms.length; i++) {
+      if(this.forms[i].submissionStatus == "QUEUED") {
+        this.sendForm(this.forms[i])
+      }
+    }
+  }
+
+  sendForm(form) {
+
+    console.log("Sending Form");
+
+    var siteUrl = "http://shieldvdev.ncl.ac.uk:" + this.SERVER_NUMBER;
+    var subUrl = "/forms/api/submission/";
+    var valUrl = "/forms/api/values/";
+
+    var userSubUrl = "/forms/api/user_submission/";
+
+    //set the headers for any posting.
+    var headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+
+
+    //Post form.
+    this.http.post(siteUrl + subUrl, JSON.stringify({ form: form.id, academic_year: form.academicYear, user_profile: form.userProfile }), { headers: headers }).subscribe(data => {
+      var items = data.json();
+
+      //post was successfull.
+      if (items.id) {
+
+        console.log("added submission");
+        console.log(items);
+        var id = items.id;
+
+        //Add submission id to all questions about to be submitted.
+        for (var v in form.questions) {
+          form.questions[v].submissionID = id;
+
+        }
+
+        //Post answers to all questions.
+        console.log(form.questions)
+        for (var i = 0; i < form.questions.length; i++) {
+          //console.log(this.form.questions[v])
+          console.log({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id });
+          this.http.post(siteUrl + valUrl, JSON.stringify({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id }), { headers: headers }).subscribe(data => {
+            var result = data.json();
+
+            //If post was successful.
+            if (result.result) {
+              console.log("added Values");
+            } else {
+              //Delete submission upon failure.
+              console.log("failed to add values");
+              this.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+                var deleteresult = data.json();
+                console.log(deleteresult);
+              });
+            }
+          });
+          //Delete (Here to simulate transaction failure) ------------------------------------
+          if (i == 12) {
+            console.log("failed to add at " + i + ": deleting");
+            this.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+              var deleteresult = data.json();
+              console.log(deleteresult);
+            });
+            break;
+          }
+          //Delete ---------------------------------------------------------------------------
+        }
+      }
+    });
+  }
+
 
   getForms() {
 
