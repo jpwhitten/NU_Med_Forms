@@ -24,7 +24,10 @@ export class HomePage {
   questionItems: any;
   connection: String = "";
   savedForms: any = false;
-  public SERVER_NUMBER = '8000';
+  public SERVER_NUMBER = '8014';
+  hasFailed = false;
+  retry: number = 0;
+  RETRY_MAX = 10;
 
   queuedForm: Form;
 
@@ -45,96 +48,96 @@ export class HomePage {
         console.log(this.savedForms)
       }
 
-      if(this.navParams.get('form') != null) {
-        this.queuedForm = this.navParams.get('form');   
+      if (this.navParams.get('form') != null) {
+        this.queuedForm = this.navParams.get('form');
         console.log(this.queuedForm);
 
         //For each saved form push the form to the array of forms to be presented.
-      if (forms) {
-        this.savedForms.forEach((savedForm) => {
+        if (forms) {
+          this.savedForms.forEach((savedForm) => {
 
-          let loadForm;
+            let loadForm;
 
-          if(savedForm.id != this.queuedForm.id) {
+            if (savedForm.id != this.queuedForm.id) {
 
-             //Temporary form.
-            loadForm = new Form(savedForm.id,
-            savedForm.label,
-            savedForm.formSlug,
-            savedForm.customName,
-            savedForm.moduleCode,
-            savedForm.open,
-            savedForm.typeName,
-            savedForm.studyID,
-            savedForm.fieldAPI,
-            savedForm.close,
-            savedForm.type,
-            savedForm.academicYear,
-            savedForm.userProfile,
-            savedForm.questions,
-            savedForm.submissionStatus);
+              //Temporary form.
+              loadForm = new Form(savedForm.id,
+                savedForm.label,
+                savedForm.formSlug,
+                savedForm.customName,
+                savedForm.moduleCode,
+                savedForm.open,
+                savedForm.typeName,
+                savedForm.studyID,
+                savedForm.fieldAPI,
+                savedForm.close,
+                savedForm.type,
+                savedForm.academicYear,
+                savedForm.userProfile,
+                savedForm.questions,
+                savedForm.submissionStatus);
 
-          loadForm.hasStarted = savedForm.hasStarted;
+              loadForm.hasStarted = savedForm.hasStarted;
 
 
-          } else {
+            } else {
 
-            loadForm = this.queuedForm;
+              loadForm = this.queuedForm;
 
-          }
-         
-          //Push temporary form.                         
-          this.forms.push(loadForm);
-          console.log(this.forms)
+            }
 
-          loadForm.form.subscribe(update => {
-            this.save();
+            //Push temporary form.                         
+            this.forms.push(loadForm);
+            console.log(this.forms)
+
+            loadForm.form.subscribe(update => {
+              this.save();
+            })
+
+
+
+
           })
+        }
 
-         
-
-
-        })
-      }
-    
       } else {
-        
-         if (forms) {
-        this.savedForms.forEach((savedForm) => {
 
-          let loadForm;
+        if (forms) {
+          this.savedForms.forEach((savedForm) => {
 
-             //Temporary form.
+            let loadForm;
+
+            //Temporary form.
             loadForm = new Form(savedForm.id,
-            savedForm.label,
-            savedForm.formSlug,
-            savedForm.customName,
-            savedForm.moduleCode,
-            savedForm.open,
-            savedForm.typeName,
-            savedForm.studyID,
-            savedForm.fieldAPI,
-            savedForm.close,
-            savedForm.type,
-            savedForm.academicYear,
-            savedForm.userProfile,
-            savedForm.questions,
-            savedForm.submissionStatus);
+              savedForm.label,
+              savedForm.formSlug,
+              savedForm.customName,
+              savedForm.moduleCode,
+              savedForm.open,
+              savedForm.typeName,
+              savedForm.studyID,
+              savedForm.fieldAPI,
+              savedForm.close,
+              savedForm.type,
+              savedForm.academicYear,
+              savedForm.userProfile,
+              savedForm.questions,
+              savedForm.submissionStatus);
 
-          loadForm.hasStarted = savedForm.hasStarted;
+            loadForm.hasStarted = savedForm.hasStarted;
 
-          //Push temporary form.                         
-          this.forms.push(loadForm);
-          console.log(this.forms)
+            //Push temporary form.                         
+            this.forms.push(loadForm);
+            console.log(this.forms)
 
-          loadForm.form.subscribe(update => {
-            this.save();
-          })
+            loadForm.form.subscribe(update => {
+              this.save();
+            })
 
-         
 
-        });
-      }
+
+          });
+        }
 
 
       }
@@ -142,7 +145,7 @@ export class HomePage {
       this.sendQueuedForms();
       this.getForms();
 
-      
+
 
     })
 
@@ -175,78 +178,114 @@ export class HomePage {
   }
 
   sendQueuedForms() {
-    for(var i = 0; i < this.forms.length; i++) {
-      if(this.forms[i].submissionStatus == "QUEUED") {
-        this.sendForm(this.forms[i])
+    for (var i = 0; i < this.forms.length; i++) {
+      if (this.forms[i].submissionStatus == "QUEUED") {
+        this.sendForm(this.forms[i]).then(msg => {
+          console.log(msg)
+          console.log("called");
+          if (msg) {
+            console.log("remove");
+            console.log(i);
+            this.removeFormFromList(i);
+          } else if (this.retry <= this.RETRY_MAX) {
+            console.log("Retry: " + this.retry)
+            setTimeout(() => {
+              this.sendQueuedForms();
+              this.retry++;
+            }, 2000);
+          }
+        });
       }
     }
   }
 
   sendForm(form) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+      console.log("Sending Form");
 
-    console.log("Sending Form");
+      var siteUrl = "http://shieldvdev.ncl.ac.uk:" + "8014";
+      var subUrl = "/forms/api/submission/";
+      var valUrl = "/forms/api/values/";
 
-    var siteUrl = "http://shieldvdev.ncl.ac.uk:" + this.SERVER_NUMBER;
-    var subUrl = "/forms/api/submission/";
-    var valUrl = "/forms/api/values/";
+      var userSubUrl = "/forms/api/user_submission/";
 
-    var userSubUrl = "/forms/api/user_submission/";
-
-    //set the headers for any posting.
-    var headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+      //set the headers for any posting.
+      var headers = new Headers();
+      headers.append('Content-Type', 'application/json');
 
 
-    //Post form.
-    this.http.post(siteUrl + subUrl, JSON.stringify({ form: form.id, academic_year: form.academicYear, user_profile: form.userProfile }), { headers: headers }).subscribe(data => {
-      var items = data.json();
+      //Post form.
+      self.http.post(siteUrl + subUrl, JSON.stringify({ form: form.id, academic_year: form.academicYear, user_profile: form.userProfile }), { headers: headers }).subscribe(data => {
+        var items = data.json();
 
-      //post was successfull.
-      if (items.id) {
+        //post was successfull.
+        if (items.id) {
 
-        console.log("added submission");
-        console.log(items);
-        var id = items.id;
+          console.log("added submission");
+          console.log(items);
+          var id = items.id;
 
-        //Add submission id to all questions about to be submitted.
-        for (var v in form.questions) {
-          form.questions[v].submissionID = id;
-
-        }
-
-        //Post answers to all questions.
-        console.log(form.questions)
-        for (var i = 0; i < form.questions.length; i++) {
-          //console.log(this.form.questions[v])
-          console.log({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id });
-          this.http.post(siteUrl + valUrl, JSON.stringify({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id }), { headers: headers }).subscribe(data => {
-            var result = data.json();
-
-            //If post was successful.
-            if (result.result) {
-              console.log("added Values");
-            } else {
-              //Delete submission upon failure.
-              console.log("failed to add values");
-              this.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
-                var deleteresult = data.json();
-                console.log(deleteresult);
-              });
-            }
-          });
-          //Delete (Here to simulate transaction failure) ------------------------------------
-          if (i == 12) {
-            console.log("failed to add at " + i + ": deleting");
-            this.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
-              var deleteresult = data.json();
-              console.log(deleteresult);
-            });
-            break;
+          //Add submission id to all questions about to be submitted.
+          for (var v in form.questions) {
+            form.questions[v].submissionID = id;
           }
-          //Delete ---------------------------------------------------------------------------
+
+          self.sendFormAnswers(form, siteUrl, valUrl, userSubUrl, id, headers).then(success => {
+            resolve(success);
+          })
+
+        } else {
+
         }
-      }
-    });
+      });
+    })
+  }
+
+ sendFormAnswers(form, siteUrl, valUrl, userSubUrl, id, headers) {
+   var self = this;
+     return new Promise((resolve, reject) => {
+            //Post answers to all questions.
+            console.log(form.questions)
+            for (var i = 0; i < form.questions.length; i++) {
+              //console.log(this.form.questions[v])
+              console.log({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id });
+              self.http.post(siteUrl + valUrl, JSON.stringify({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id }), { headers: headers }).subscribe(data => {
+                var result = data.json();
+
+                //If post was successful.
+                if (result.result) {
+                  console.log("added Values");
+                } else {
+                  //Delete submission upon failure.
+                  console.log("failed to add values");
+                  self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+                    resolve(false);
+                    var deleteresult = data.json();
+                    console.log(deleteresult);
+                  });
+                }
+              });
+              //Delete (Here to simulate transaction failure) ------------------------------------
+              if (i == 12 && self.retry != 10) {
+                console.log("failed to add at " + i + ": deleting");
+                self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+                  resolve(false);
+                  var deleteresult = data.json();
+                  console.log(deleteresult);
+                });
+                break;
+              }
+              //Delete ---------------------------------------------------------------------------
+              if(i == form.questions.length - 1) {
+                resolve(true);
+              }
+            } 
+     });
+ }
+
+  removeFormFromList(index) {
+    this.forms.splice(index - 1);
   }
 
 

@@ -5,6 +5,7 @@ import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { Data } from '../providers/data';
 import { FormViewPage } from '../pages/form-view/form-view';
+import { SignaturePadModule } from 'angular2-signaturepad';
 
 @NgModule({
   declarations: [
@@ -13,7 +14,8 @@ import { FormViewPage } from '../pages/form-view/form-view';
     FormViewPage
   ],
   imports: [
-    IonicModule.forRoot(MyApp)
+    IonicModule.forRoot(MyApp),
+    SignaturePadModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [

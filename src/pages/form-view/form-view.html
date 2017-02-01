@@ -1,5 +1,4 @@
 <ion-header>
-
   <ion-navbar secondary>
     <ion-title>{{form.label}}</ion-title>
   </ion-navbar>
@@ -72,7 +71,7 @@
             <ng-container *ngFor="let restriction of form.questions[i].restrictions;">
               <ng-container *ngIf="restriction.option == question.answer;">
                 <ng-container>
-                  
+
 
                   <p id="question_title"> {{form.findQuestion(restriction.objectid).label}} </p>
 
@@ -88,14 +87,16 @@
                   <div *ngIf="form.findQuestion(restriction.objectid).fieldType == 1" id="text-area">
                     <ion-item>
                       <ion-label floating>Answer Here</ion-label>
-                      <ion-input formControlName="{{form.findQuestion(restriction.objectid).id}}" (blur)="form.answerQuestion(); answerQuestion(i)" [(ngModel)]="form.findQuestion(restriction.objectid).answer"></ion-input>
+                      <ion-input formControlName="{{form.findQuestion(restriction.objectid).id}}" (blur)="form.answerQuestion(); answerQuestion(i)"
+                        [(ngModel)]="form.findQuestion(restriction.objectid).answer"></ion-input>
                     </ion-item>
                   </div>
 
                   <div *ngIf="form.findQuestion(restriction.objectid).fieldType == 2" id="text-area">
                     <ion-item>
                       <ion-label floating>Answer Here</ion-label>
-                      <ion-textarea formControlName="{{form.findQuestion(restriction.objectid).id}}" (blur)="form.answerQuestion(); answerQuestion(i)" [(ngModel)]="form.findQuestion(restriction.objectid).answer"></ion-textarea>
+                      <ion-textarea formControlName="{{form.findQuestion(restriction.objectid).id}}" (blur)="form.answerQuestion(); answerQuestion(i)"
+                        [(ngModel)]="form.findQuestion(restriction.objectid).answer"></ion-textarea>
                     </ion-item>
                   </div>
 
@@ -103,27 +104,30 @@
                     <ion-list>
                       <ion-item *ngFor="let choice of question.choices; let j = index;">
                         <ion-label>{{ choice.text }} </ion-label>
-                        <ion-checkbox formControlName="{{form.findQuestion(restriction.objectid).id}}" (click)="form.answerQuestion(); answerQuestion(i)" [(ngModel)]="form.findQuestion(restriction.objectid).answer[j]"></ion-checkbox>
+                        <ion-checkbox formControlName="{{form.findQuestion(restriction.objectid).id}}" (click)="form.answerQuestion(); answerQuestion(i)"
+                          [(ngModel)]="form.findQuestion(restriction.objectid).answer[j]"></ion-checkbox>
                       </ion-item>
                     </ion-list>
                   </div>
 
                   <div *ngIf="form.findQuestion(restriction.objectid).fieldType == 6" class="drop-down">
-                    <ion-select formControlName="{{form.findQuestion(restriction.objectid).id}}" [(ngModel)]="form.findQuestion(restriction.objectid).answer" placeholder="Select">
+                    <ion-select formControlName="{{form.findQuestion(restriction.objectid).id}}" [(ngModel)]="form.findQuestion(restriction.objectid).answer"
+                      placeholder="Select">
                       <ion-option (ionSelect)="form.answerQuestion(); answerQuestion(i)" *ngFor="let choice of form.findQuestion(restriction.objectid).choices">{{ choice.text }}</ion-option>
                     </ion-select>
                   </div>
 
                   <div *ngIf="form.findQuestion(restriction.objectid).fieldType == 7" class="drop-down">
-                    <ion-select formControlName="{{form.findQuestion(restriction.objectid).id}}" multiple="true" [(ngModel)]="form.findQuestion(restriction.objectid).answer" placeholder="Select">
+                    <ion-select formControlName="{{form.findQuestion(restriction.objectid).id}}" multiple="true" [(ngModel)]="form.findQuestion(restriction.objectid).answer"
+                      placeholder="Select">
                       <ion-option (ionSelect)="form.answerQuestion(); answerQuestion(i)" *ngFor="let choice of form.findQuestion(restriction.objectid).choices">{{ choice.text }}</ion-option>
                     </ion-select>
                   </div>
 
                   <div *ngIf="form.findQuestion(restriction.objectid).fieldType == 10">
                     <ion-label>Select Date</ion-label>
-                    <ion-datetime formControlName="{{form.findQuestion(restriction.objectid).id}}" (ionChange)="form.answerQuestion(); answerQuestion(i)" displayFormat="MM/DD/YYYY"
-                      [(ngModel)]="form.findQuestion(restriction.objectid).answer"></ion-datetime>
+                    <ion-datetime formControlName="{{form.findQuestion(restriction.objectid).id}}" (ionChange)="form.answerQuestion(); answerQuestion(i)"
+                      displayFormat="MM/DD/YYYY" [(ngModel)]="form.findQuestion(restriction.objectid).answer"></ion-datetime>
                   </div>
 
 
@@ -147,6 +151,26 @@
         <img style="width:50%;height:40%" [src]="base64Image" *ngIf="base64Image" />
         <button (click)="submitForm()"> Submit </button>
         <p *ngIf="hasInvalidAnswers()">{{invalidAnswers}}</p>
+
+        <ion-row [ngClass]="{'drawing-active': isDrawing}">
+          <ion-col></ion-col>
+          <ion-col>
+            <signature-pad [options]="signaturePadOptions" (onBeginEvent)="drawStart()" (onEndEvent)="drawComplete()"></signature-pad>
+          </ion-col>
+          <ion-col></ion-col>
+
+        </ion-row>
+        <button ion-button full color="danger" (click)="clearPad()">Clear</button>
+        <button ion-button full color="secondary" (click)="savePad()">Save</button>
+
+        <ion-row>
+          <ion-col></ion-col>
+          <ion-col width-80>
+            <img [src]="signature" />
+          </ion-col>
+          <ion-col></ion-col>
+        </ion-row>
+
       </ion-slide>
 
     </ion-slides>

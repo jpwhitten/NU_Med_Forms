@@ -7,6 +7,10 @@ import { Question } from '../../providers/question';
 import { Camera } from 'ionic-native';
 import { Network } from "ionic-native";
 import { HomePage } from '../home/home'
+import { SignaturePad } from 'angular2-signaturepad/signature-pad';
+import { Storage } from '@ionic/storage';
+import { ToastController } from 'ionic-angular';
+
 
 
 /*
@@ -21,8 +25,21 @@ import { HomePage } from '../home/home'
 })
 export class FormViewPage {
 
-  public SERVER_NUMBER = '8000';
+  public SERVER_NUMBER = '8014';
   public connection: string = "";
+
+
+  signature = '';
+  isDrawing = false;
+
+  @ViewChild(SignaturePad) signaturePad: SignaturePad;
+  private signaturePadOptions: Object = { 
+    'minWidth': 2,
+    'canvasWidth': 400,
+    'canvasHeight': 200,
+    'backgroundColor': '#f6fbff',
+    'penColor': '#666a73',
+  };
 
 
   //Slides componant from the view representing each question on the form.
@@ -47,7 +64,9 @@ export class FormViewPage {
   //Class constructor.
   constructor(private nav: NavController,
     private navParams: NavParams,
-    private http: Http) {
+    private http: Http,
+    public storage: Storage, 
+    public toastCtrl: ToastController) {
 
 
 
@@ -434,6 +453,36 @@ export class FormViewPage {
 
   isOnline() {
     return false
+  }
+
+  ionViewDidEnter() {
+    this.signaturePad.clear()
+    this.storage.get('savedSignature').then((data) => {
+      this.signature = data;
+    });
+  }
+ 
+  drawComplete() {
+    this.isDrawing = false;
+  }
+ 
+  drawStart() {
+    this.isDrawing = true;
+  }
+ 
+  savePad() {
+    this.signature = this.signaturePad.toDataURL();
+    this.storage.set('savedSignature', this.signature);
+    this.signaturePad.clear();
+    let toast = this.toastCtrl.create({
+      message: 'New Signature saved.',
+      duration: 3000
+    });
+    toast.present();
+  }
+ 
+  clearPad() {
+    this.signaturePad.clear();
   }
 
 }
