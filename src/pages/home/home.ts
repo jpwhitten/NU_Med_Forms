@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, Platform, AlertController } from 'ionic-angular';
 import { Http, Headers, Jsonp } from '@angular/http';
 import { Form } from '../../providers/form';
@@ -8,9 +8,8 @@ import { Storage } from '@ionic/storage';
 import { Data } from '../../providers/data';
 import { FormViewPage } from '../form-view/form-view'
 import { Network } from "ionic-native";
-import { Restriction } from '../../providers/restriction'
-
-
+import { Restrictions } from '../../providers/restrictions'
+import { ConnectionService } from '../../providers/connection-service'
 
 @Component({
   selector: 'page-home',
@@ -22,24 +21,32 @@ export class HomePage {
   local: Storage;
   items: any;
   questionItems: any;
-  connection: String = "";
   savedForms: any = false;
   public SERVER_NUMBER = '8014';
   hasFailed = false;
   retry: number = 0;
   RETRY_MAX = 10;
-
   queuedForm: Form;
 
-  constructor(public nav: NavController,
-    private http: Http,
-    private navCtrl: NavController,
-    public dataService: Data,
-    private platform: Platform,
-    private navParams: NavParams,
-    private alertController: AlertController) {
 
-    //Check local stoage for any saved forms.
+  constructor(public navCtrl: NavController,
+    public platform: Platform,
+    private chRef: ChangeDetectorRef,
+    public nav: NavController,
+    private http: Http,
+    public dataService: Data,
+    private navParams: NavParams,
+    private alertController: AlertController,
+    private connectionService: ConnectionService) {
+
+    this.connectionService.connectionService.subscribe(() => {
+      chRef.detectChanges();
+      console.log("changes");
+    })
+
+    platform.ready().then(() => {
+
+      //Check local stoage for any saved forms.
     this.local = new Storage();
     this.dataService.getFormsData().then((forms) => {
 
@@ -149,35 +156,12 @@ export class HomePage {
 
     })
 
-    if (Network.connection != "none") {
-      this.connection = "Online";
-      this.sendQueuedForms();
-    } else {
-      this.connection = "Offline";
-    }
 
-    let disconnectSubscription = Network.onDisconnect().subscribe(() => {
-      console.log('network was disconnected :( ')
-      this.connection = "offline";
-    });
-
-    let connectSubscription = Network.onConnect().subscribe(() => {
-      console.log('network connected!');
-      setTimeout(() => {
-        console.log(Network.connection);
-        if (Network.connection != "none") {
-          console.log('Connection!');
-          console.log("online: " + Network.connection);
-          this.connection = "online";
-          this.getForms();
-          this.sendQueuedForms();
-        }
-      }, 3000);
     });
 
   }
 
-  sendQueuedForms() {
+   sendQueuedForms() {
     for (var i = 0; i < this.forms.length; i++) {
       if (this.forms[i].submissionStatus == "QUEUED") {
         this.sendForm(this.forms[i]).then(msg => {
@@ -197,7 +181,7 @@ export class HomePage {
         });
       }
     }
-  }
+  } 
 
   sendForm(form) {
     var self = this;
@@ -242,47 +226,47 @@ export class HomePage {
     })
   }
 
- sendFormAnswers(form, siteUrl, valUrl, userSubUrl, id, headers) {
-   var self = this;
-     return new Promise((resolve, reject) => {
-            //Post answers to all questions.
-            console.log(form.questions)
-            for (var i = 0; i < form.questions.length; i++) {
-              //console.log(this.form.questions[v])
-              console.log({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id });
-              self.http.post(siteUrl + valUrl, JSON.stringify({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id }), { headers: headers }).subscribe(data => {
-                var result = data.json();
+  sendFormAnswers(form, siteUrl, valUrl, userSubUrl, id, headers) {
+    var self = this;
+    return new Promise((resolve, reject) => {
+      //Post answers to all questions.
+      console.log(form.questions)
+      for (var i = 0; i < form.questions.length; i++) {
+        //console.log(this.form.questions[v])
+        console.log({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id });
+        self.http.post(siteUrl + valUrl, JSON.stringify({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id }), { headers: headers }).subscribe(data => {
+          var result = data.json();
 
-                //If post was successful.
-                if (result.result) {
-                  console.log("added Values");
-                } else {
-                  //Delete submission upon failure.
-                  console.log("failed to add values");
-                  self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
-                    resolve(false);
-                    var deleteresult = data.json();
-                    console.log(deleteresult);
-                  });
-                }
-              });
-              //Delete (Here to simulate transaction failure) ------------------------------------
-              if (i == 12 && self.retry != 10) {
-                console.log("failed to add at " + i + ": deleting");
-                self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
-                  resolve(false);
-                  var deleteresult = data.json();
-                  console.log(deleteresult);
-                });
-                break;
-              }
-              //Delete ---------------------------------------------------------------------------
-              if(i == form.questions.length - 1) {
-                resolve(true);
-              }
-            } 
-     });
- }
+          //If post was successful.
+          if (result.result) {
+            console.log("added Values");
+          } else {
+            //Delete submission upon failure.
+            console.log("failed to add values");
+            self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+              resolve(false);
+              var deleteresult = data.json();
+              console.log(deleteresult);
+            });
+          }
+        });
+        //Delete (Here to simulate transaction failure) ------------------------------------
+        if (i == 12 && self.retry != 10) {
+          console.log("failed to add at " + i + ": deleting");
+          self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+            resolve(false);
+            var deleteresult = data.json();
+            console.log(deleteresult);
+          });
+          break;
+        }
+        //Delete ---------------------------------------------------------------------------
+        if (i == form.questions.length - 1) {
+          resolve(true);
+        }
+      }
+    });
+  }
 
   removeFormFromList(index) {
     this.forms.splice(index - 1);
@@ -387,12 +371,12 @@ export class HomePage {
           });
         }
 
-        var restrictionArray: Restriction[] = [];
+        var restrictionArray: Restrictions[] = [];
         var restrictions = this.questionItems[i].restrictions;
 
         for (var k = 0; k < this.questionItems[i].restrictions.length; k++) {
 
-          var restriction = new Restriction(restrictions[k].condition,
+          var restriction = new Restrictions(restrictions[k].condition,
             restrictions[k].logic.action,
             restrictions[k].option,
             restrictions[k].logic.object_id)
@@ -416,8 +400,6 @@ export class HomePage {
             this.questionItems[i].order,
             null,
             answerArray,
-            false,
-            false,
             restrictionArray
           ));
 
@@ -432,8 +414,6 @@ export class HomePage {
             this.questionItems[i].order,
             null,
             null,
-            false,
-            false,
             restrictionArray
           ));
 
@@ -562,7 +542,7 @@ export class HomePage {
     this.platform.ready().then(() => {
       let alert = this.alertController.create({
         title: "Connection Status",
-        subTitle: <string>Network.connection,
+        subTitle: Network.type,
         buttons: ["OK"]
       });
       alert.present();
@@ -570,6 +550,53 @@ export class HomePage {
 
 
 
+  }
+
+  populateWithDummyForms() {
+
+    console.log("Populating");
+
+    var questions: Question[] = []
+    var choices: ChoiceValues[] = []
+    var restrictions: Restrictions[] = [];
+
+    for(var i = 0; i < 3; i++) {
+      choices.push(new ChoiceValues(i.toString(), i.toString()))
+    }
+
+      questions.push(new Question(
+        "1",
+        "Question",
+        1,
+        null,
+        "textFieldType",
+        i,
+        "submissionID",
+        null,
+        new Array<Restrictions>()
+        ));
+
+    
+
+    for(var i = 0; i < 3; i++){
+      this.forms.push(new Form(
+        i.toString(),
+        "Form " + i,
+        "abc",
+        "customName",
+        123,
+        "open",
+        "typeName",
+        "studyID",
+        "fieldAPI",
+        "close",
+        i,
+        "academicYear",
+        "userProfile",
+        questions,
+        "submissionStatus"
+      ))
+    }
   }
 
 }

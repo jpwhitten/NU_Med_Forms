@@ -10,8 +10,7 @@ import { HomePage } from '../home/home'
 import { SignaturePad } from 'angular2-signaturepad/signature-pad';
 import { Storage } from '@ionic/storage';
 import { ToastController } from 'ionic-angular';
-
-
+import { FormService } from '../../providers/form-service';
 
 /*
   Generated class for the FormView page.
@@ -25,7 +24,7 @@ import { ToastController } from 'ionic-angular';
 })
 export class FormViewPage {
 
-  public SERVER_NUMBER = '8014';
+   public SERVER_NUMBER = '8014';
   public connection: string = "";
 
 
@@ -66,11 +65,14 @@ export class FormViewPage {
     private navParams: NavParams,
     private http: Http,
     public storage: Storage, 
-    public toastCtrl: ToastController) {
+    public toastCtrl: ToastController,
+    public formService: FormService) {
+
+      console.log(formService.test)
 
 
 
-    if (Network.connection != "none") {
+    if (Network.type != "none") {
       this.connection = "Online";
     } else {
       this.connection = "Offline";
@@ -84,10 +86,10 @@ export class FormViewPage {
     let connectSubscription = Network.onConnect().subscribe(() => {
       console.log('network connected!');
       setTimeout(() => {
-        console.log(Network.connection);
-        if (Network.connection != "none") {
+        console.log(Network.type);
+        if (Network.type != "none") {
           console.log('Connection!');
-          console.log("online: " + Network.connection);
+          console.log("online: " + Network.type);
           this.connection = "online";
         }
       }, 3000);
@@ -211,18 +213,12 @@ export class FormViewPage {
             }
             this.getQuestionValidationStateForID(restrictedQuestion.id).setValidators(validation);
             console.log(this.getQuestionValidationStateForID(restrictedQuestion.id).valid)
-            if(restrictedQuestion.answer != null) {
-                restrictedQuestion.hasValidAnswer = this.getQuestionValidationStateForID(restrictedQuestion.id).valid;
-            } else {
-                restrictedQuestion.hasValidAnswer = false;
-            }
-            console.log( restrictedQuestion.hasValidAnswer);
+            
         
       } else {
 
         this.getQuestionValidationStateForID(restrictedQuestion.id).setValidators(Validators.minLength(-1));
         console.log(this.getQuestionValidationStateForID(restrictedQuestion.id).valid)
-        restrictedQuestion.hasValidAnswer = this.getQuestionValidationStateForID(restrictedQuestion.id).valid;
         
       }
 
@@ -307,7 +303,7 @@ export class FormViewPage {
 
     var invalidAnswers = "Invalid Answers: "
     for (var i = 0; i < this.form.questions.length; i++) {
-      if (!this.form.questions[i].hasValidAnswer) {
+      if (!this.getQuestionValidationState(i).valid) {
         invalidAnswers = invalidAnswers.concat(i + ", ")
       }
 
@@ -324,11 +320,12 @@ export class FormViewPage {
 
     
 
-    console.log("question answer valid?" + this.form.questions[i].hasValidAnswer)
-    this.form.questions[i].hasValidAnswer = this.getQuestionValidationState(i).valid;
+    console.log("question answer valid?" + this.getQuestionValidationState(i).valid)
     if (!this.form.questions[i].isDirty) {
       this.form.questions[i].isDirty = this.getQuestionValidationState(i).dirty;
     }
+    
+    this.form.questions[i].answer = this.getQuestionValidationState(i).value; 
 
      setTimeout(() => {
         var questionID = this.form.questions[i].id
@@ -452,7 +449,7 @@ export class FormViewPage {
   }
 
   isOnline() {
-    return false
+    return ;
   }
 
   ionViewDidEnter() {
@@ -461,13 +458,15 @@ export class FormViewPage {
       this.signature = data;
     });
   }
- 
+  
   drawComplete() {
     this.isDrawing = false;
+    this.slides.lockSwipes(false);
   }
  
   drawStart() {
     this.isDrawing = true;
+    this.slides.lockSwipes(true);
   }
  
   savePad() {
@@ -484,5 +483,6 @@ export class FormViewPage {
   clearPad() {
     this.signaturePad.clear();
   }
+
 
 }

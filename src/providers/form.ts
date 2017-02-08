@@ -7,7 +7,8 @@ import 'rxjs/add/operator/map';
 /*
   Generated class for the Form provider.
 
-  Model for a form, including a form observer to save any answers when it detects the input.
+  See https://angular.io/docs/ts/latest/guide/dependency-injection.html
+  for more info on providers and Angular 2 DI.
 */
 @Injectable()
 export class Form {
@@ -40,7 +41,7 @@ export class Form {
 
   }
 
-  buildForm(): void {
+   buildForm(): void {
 
     this.formObserver.next(true);
 

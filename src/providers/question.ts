@@ -1,16 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { ChoiceValues } from '../providers/choice-values';
-import { Restriction } from '../providers/restriction'
+import { Restrictions } from '../providers/restrictions';
 import 'rxjs/add/operator/map';
 
 /*
-  Generated class for the Questions provider.
+  Generated class for the Question provider.
 
-  Model for a Question including all choices and an answer.
+  See https://angular.io/docs/ts/latest/guide/dependency-injection.html
+  for more info on providers and Angular 2 DI.
 */
 @Injectable()
 export class Question {
+
+  public isDirty: boolean = false;
 
   constructor(public id: string,
     public label: string,
@@ -20,11 +23,13 @@ export class Question {
     public order: number,
     public submissionID: String,
     public answer: any[],
-    public hasValidAnswer: boolean,
-    public isDirty: boolean,
-    public restrictions: Restriction[]) {
+    public restrictions: Restrictions[]) {
 
 
+  }
+
+  makeDirty() {
+    this.isDirty = true;
   }
 
 

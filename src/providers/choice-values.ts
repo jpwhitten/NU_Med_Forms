@@ -5,8 +5,8 @@ import 'rxjs/add/operator/map';
 /*
   Generated class for the ChoiceValues provider.
 
-  Stores the answer for a question, such as a radio select that may have 
-  a text value and a numerical value
+  See https://angular.io/docs/ts/latest/guide/dependency-injection.html
+  for more info on providers and Angular 2 DI.
 */
 @Injectable()
 export class ChoiceValues {
@@ -15,5 +15,6 @@ export class ChoiceValues {
               public value: string) {
     
   }
+
 
 }

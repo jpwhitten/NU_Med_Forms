@@ -1,33 +1,36 @@
 <ion-header>
-  <ion-navbar>
-    <ion-title>Your Forms</ion-title>
-  </ion-navbar>
+    <ion-navbar>
+        <ion-title>
+            <ion-icon class="icon" name="md-paper"></ion-icon>Your Forms</ion-title>
+    </ion-navbar>
 </ion-header>
+
 
 <ion-content padding>
 
-  <p>Connection:  {{ connection }} </p> 
+    <p>Connection: {{ connectionService.connection }} </p>
 
-  <button (click)="removeAll()"> Remove All </button>
-  <button (click)="showAllFormInfo()"> Show All Info </button>
-  <button (click)="orderFormsByClosing()"> Order: Closing </button>
-  <button (click)="orderFormsByOpen()"> Order: Open </button>
-  <button (click)="orderFormsByType()"> Order: Type </button>
-  <button (click)="orderFormsByName()"> Order: Name </button>
-  <button (click)="orderFormsByCompletion()"> Order: Completion </button>
-  <button (click)="sendQueuedForms()"> Send Queued </button>
-  
+    <button (click)="removeAll()"> Remove All </button>
+    <button (click)="showAllFormInfo()"> Show All Info </button>
+    <button (click)="orderFormsByClosing()"> Order: Closing </button>
+    <button (click)="orderFormsByOpen()"> Order: Open </button>
+    <button (click)="orderFormsByType()"> Order: Type </button>
+    <button (click)="orderFormsByName()"> Order: Name </button>
+    <button (click)="orderFormsByCompletion()"> Order: Completion </button>
+    <button (click)="sendQueuedForms()"> Send Queued </button>
+    <button (click)="populateWithDummyForms()"> Populate </button>
 
-  <ion-list>
-    <ion-item *ngFor="let form of forms">
-    <button ion-item (click)="viewForm(form)">
+
+    <ion-list no-lines>
+        <ion-item *ngFor="let form of forms">
+            <button ion-item (click)="viewForm(form)">
          {{form.label}} 
          <div style="float:right;">{{getApproximateTimeLeft(form)}}</div>
          <div style="float:right; margin-right: 50px">{{form.questionsAnswered()}} / {{form.numberQuestions()}}</div>
           <div style="float:right; margin-right: 50px">{{form.submissionStatus}}</div>
          
      </button>
-    </ion-item>
-  </ion-list>
+        </ion-item>
+    </ion-list>
 
 </ion-content>
