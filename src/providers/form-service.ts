@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { Http, Headers } from '@angular/http';
 import 'rxjs/add/operator/map';
 import { Form } from '../providers/form';
 import { Question } from '../providers/question';
@@ -20,8 +20,8 @@ import { Platform } from 'ionic-angular';
 @Injectable()
 export class FormService {
 
-  forms: Form[];
-  public SERVER_NUMBER = '8014';
+  forms: Form[] = [];
+  public SERVER_NUMBER = '8010';
   hasFailed = false;
   retry: number = 0;
   RETRY_MAX = 10;
@@ -34,103 +34,128 @@ export class FormService {
     public dataService: Data,
     public platform: Platform) {
 
+    this.makeFormArray();
+    console.log(this.forms);
+    console.log("forms service");
+
   }
 
   makeFormArray() {
 
-   var serverForms = this.getFormsFromServer();
-   var savedForms = this.getSavedForms();
+    var serverForms: Form[];
+    this.getFormsFromServer().then((result) => {
+      serverForms = result;
+      console.log(serverForms);
+      var savedForms = this.getSavedForms();
+      console.log(savedForms);
 
-   var add: boolean;
-
-   for(var i = 0; i < serverForms.length; i++) {
-     var form = serverForms[i]
-     add = true;
-     for(var j = 0; j < savedForms.length; j++) {
-       if(form = savedForms[j]) {
-         add = false;
-       }
-     }
-     if(add) {
-       this.forms.push(new Form(
-         form.id,
-         form.label,
-         form.formSlug,
-         form.customName,
-         form.moduleCode,
-         form.open,
-         form.typeName,
-         form.studyID,
-         form.fieldAPI,
-         form.close,
-         form.type,
-         form.academicYear,
-         form.userProfile,
-         this.getQuestions(form.fieldAPI),
-         this.INCOMPLETE,
-       ));
-     }
-   }
-
-
-  }
-
-  getFormsFromServer(): Form[] {
-
-    var serverForm: Form[] = [];
-
-    //Contact server to download any new Forms (Ones that aren't saved).
-    var liveUrl: string = "http://shieldvdev.ncl.ac.uk:" + this.SERVER_NUMBER + "/forms/api/user_forms/b1026510/?format=json";
-    var url: string = "../../assets/DummyJson/example_form copy 2.json";
-
-    //Get Json from server.
-    this.http.get(liveUrl).subscribe(data => {
-      console.log("Got data");
-      var items = data.json();
-
-      for (var i in items) {
-
-        //Get this forms questions from the server.
-        var questions = this.getQuestions(items[i].field_api);
-
-        //Temporary form with all form info.
-        var newForm: Form = new Form(
-          items[i].id,
-          items[i].name,
-          items[i].form_slug,
-          items[i].custom_name,
-          items[i].module_code,
-          items[i].open,
-          items[i].type_name,
-          items[i].study_id,
-          items[i].field_api,
-          items[i].close,
-          items[i].type,
-          items[i].academicYear,
-          items[i].userProfile,
-          questions,
-          "INCOMPLETE");
-
-        //Push new form.                              
-        serverForm.push(newForm);
-
+      for (var k in savedForms) {
+        this.forms.push(savedForms[k]);
       }
 
-    }, (err: any) => {
-      console.log(err);
-    }
+      var add: boolean;
 
-    );
+      for (var i = 0; i < serverForms.length; i++) {
+        var form = serverForms[i];
+        add = true;
+        for (var j = 0; j < savedForms.length; j++) {
+          console.log(form);
+          console.log(savedForms[j]);
+          if (form = savedForms[j]) {
+            add = false;
+          }
+        }
+        if (add) {
+          this.forms.push(new Form(
+            form.id,
+            form.label,
+            form.formSlug,
+            form.customName,
+            form.moduleCode,
+            form.open,
+            form.typeName,
+            form.studyID,
+            form.fieldAPI,
+            form.close,
+            form.type,
+            form.academicYear,
+            form.userProfile,
+            this.getQuestions(form.fieldAPI),
+            this.INCOMPLETE,
+          ));
+        }
+      }
 
-    console.log("JSON length: " + this.forms.length);
-    return serverForm;
+      this.save();
+    });
+
+
   }
 
-  getSavedForms(): Form[] {
-     
-      var savedForms: any;
+  getFormsFromServer() {
 
-     //Check local stoage for any saved forms.
+    return new Promise<Form[]>((resolve, reject) => {
+
+      var serverForm: Form[] = [];
+
+      //Contact server to download any new Forms (Ones that aren't saved).
+      var liveUrl: string = "http://shieldvdev.ncl.ac.uk:" + this.SERVER_NUMBER + "/forms/api/user_forms/b1026510/?format=json";
+      var url: string = "../../assets/DummyJson/example_form copy 2.json";
+
+      //Get Json from server.
+      this.http.get(liveUrl).subscribe(data => {
+        console.log("Got data");
+        var items = data.json();
+        console.log(items);
+
+        for (var i in items) {
+
+          //Get this forms questions from the server.
+          var questions = this.getQuestions(items[i].field_api);
+
+          //Temporary form with all form info.
+          var newForm: Form = new Form(
+            items[i].id,
+            items[i].name,
+            items[i].form_slug,
+            items[i].custom_name,
+            items[i].module_code,
+            items[i].open,
+            items[i].type_name,
+            items[i].study_id,
+            items[i].field_api,
+            items[i].close,
+            items[i].type,
+            items[i].academicYear,
+            items[i].userProfile,
+            questions,
+            this.INCOMPLETE);
+
+          //Push new form.                              
+          serverForm.push(newForm);
+
+
+        }
+
+        resolve(serverForm);
+
+      }, (err: any) => {
+        console.log(err);
+        reject(err);
+      }
+
+      );
+
+    })
+
+  }
+
+
+  getSavedForms(): Form[] {
+
+    var savedForms: Form[] = [];
+
+    //Check local stoage for any saved forms.
     this.local = new Storage();
     this.dataService.getFormsData().then((forms) => {
       if (typeof (forms) != "undefined") {
@@ -158,15 +183,15 @@ export class FormService {
           loadForm.hasStarted = savedForm.hasStarted;
 
           //Push temporary form.                         
-          this.forms.push(loadForm);
+          savedForms.push(loadForm);
           loadForm.form.subscribe(update => {
             this.save();
           })
         })
       }
-    }); 
+    });
     return savedForms;
-}
+  }
 
 
   //Get the questions for a specific form.
@@ -264,6 +289,209 @@ export class FormService {
     return questions;
 
   }
+
+  sendForm(form) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+      console.log("Sending Form");
+
+      var siteUrl = "http://shieldvdev.ncl.ac.uk:" + "8014";
+      var subUrl = "/forms/api/submission/";
+      var valUrl = "/forms/api/values/";
+
+      var userSubUrl = "/forms/api/user_submission/";
+
+      //set the headers for any posting.
+      var headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+
+      //Post form.
+      self.http.post(siteUrl + subUrl, JSON.stringify({ form: form.id, academic_year: form.academicYear, user_profile: form.userProfile }), { headers: headers }).subscribe(data => {
+        var items = data.json();
+
+        //post was successfull.
+        if (items.id) {
+
+          console.log("added submission");
+          console.log(items);
+          var id = items.id;
+
+          //Add submission id to all questions about to be submitted.
+          for (var v in form.questions) {
+            form.questions[v].submissionID = id;
+          }
+
+          self.sendFormAnswers(form, siteUrl, valUrl, userSubUrl, id, headers).then(success => {
+            resolve(success);
+          })
+
+        } else {
+
+        }
+      });
+    })
+  }
+
+  sendFormAnswers(form, siteUrl, valUrl, userSubUrl, id, headers) {
+    var self = this;
+    return new Promise((resolve, reject) => {
+      //Post answers to all questions.
+      console.log(form.questions)
+      for (var i = 0; i < form.questions.length; i++) {
+        //console.log(this.form.questions[v])
+        console.log({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id });
+        self.http.post(siteUrl + valUrl, JSON.stringify({ value: form.questions[i].answer, form_submission_id: form.questions[i].submissionID, form_field_id: form.questions[i].id }), { headers: headers }).subscribe(data => {
+          var result = data.json();
+
+          //If post was successful.
+          if (result.result) {
+            console.log("added Values");
+          } else {
+            //Delete submission upon failure.
+            console.log("failed to add values");
+            self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+              resolve(false);
+              var deleteresult = data.json();
+              console.log(deleteresult);
+            });
+          }
+        });
+        //Delete (Here to simulate transaction failure) ------------------------------------
+        if (i == 12 && self.retry != 10) {
+          console.log("failed to add at " + i + ": deleting");
+          self.http.delete(siteUrl + userSubUrl + id + "/").subscribe(data => {
+            resolve(false);
+            var deleteresult = data.json();
+            console.log(deleteresult);
+          });
+          break;
+        }
+        //Delete ---------------------------------------------------------------------------
+        if (i == form.questions.length - 1) {
+          resolve(true);
+        }
+      }
+    });
+  }
+
+  sendQueuedForms() {
+    for (var i = 0; i < this.forms.length; i++) {
+      if (this.forms[i].submissionStatus == "QUEUED") {
+        this.sendForm(this.forms[i]).then(msg => {
+          console.log(msg)
+          console.log("called");
+          if (msg) {
+            console.log("remove");
+            console.log(i);
+            this.removeFormFromList(i);
+          } else if (this.retry <= this.RETRY_MAX) {
+            console.log("Retry: " + this.retry)
+            setTimeout(() => {
+              this.sendQueuedForms();
+              this.retry++;
+            }, 2000);
+          }
+        });
+      }
+    }
+  }
+
+  removeFormFromList(index) {
+    this.forms.splice(index - 1);
+  }
+
+  orderFormsByClosing() {
+    this.forms.sort(function (a, b) {
+      var aDate = new Date(a.close).valueOf();
+      var bDate = new Date(b.close).valueOf();
+      console.log(aDate + " : " + bDate);
+      return aDate - bDate;
+    });
+  }
+
+  orderFormsByOpen() {
+    this.forms.sort(function (a, b) {
+      var aDate = new Date(a.open).valueOf();
+      var bDate = new Date(b.open).valueOf();
+      console.log(aDate + " : " + bDate);
+      return aDate - bDate;
+    });
+  }
+
+  orderFormsByName() {
+    this.forms.sort(function (a, b) {
+      var aName = a.label.toLowerCase(), bName = b.label.toLowerCase();
+      if (aName < bName)
+        return -1;
+      if (aName > bName)
+        return 1;
+      return 0;
+    });
+  }
+
+
+  orderFormsByType() {
+    this.forms.sort(function (a, b) {
+      var aName = a.typeName.toLowerCase(), bName = b.typeName.toLowerCase();
+      if (aName < bName)
+        return -1;
+      if (aName > bName)
+        return 1;
+      else {
+        var aName = a.label.toLowerCase(), bName = b.label.toLowerCase();
+        if (aName < bName)
+          return -1;
+        if (aName > bName)
+          return 1;
+        return 0;
+      }
+    });
+  }
+
+  orderFormsByCompletion() {
+    this.forms.sort(function (a, b) {
+      var aCompletion = a.questionsAnswered(), bCompletion = b.questionsAnswered();
+      if (aCompletion > bCompletion)
+        return -1;
+      if (aCompletion < bCompletion)
+        return 1;
+      else {
+        return 0;
+      }
+    });
+  }
+
+  caluclateTimeUntilDueDate(form) {
+    var today = new Date();
+    var formDue = new Date(form.close);
+    var difference = formDue.valueOf() - today.valueOf();
+    return difference
+  }
+
+  getApproximateTimeLeft(form): String {
+    var difference = this.caluclateTimeUntilDueDate(form);
+    var roundedDays = Math.round(difference / (1000 * 60 * 60 * 24));
+    return new String((roundedDays + " " + "days"));
+  }
+
+  showAllFormInfo(): void {
+
+    for (var i = 0; i < this.forms.length; i++) {
+      console.log(this.forms[i]);
+      console.log("Has Started: " + this.forms[i].hasStarted);
+      console.log("Has Completed: " + this.forms[i].hasCompleted());
+    }
+
+  }
+
+  removeAll(): void {
+
+    this.forms = [];
+    this.save();
+
+  }
+
   save(): void {
     this.dataService.saveFormsData(this.forms);
   }

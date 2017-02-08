@@ -10,22 +10,21 @@
 
     <p>Connection: {{ connectionService.connection }} </p>
 
-    <button (click)="removeAll()"> Remove All </button>
-    <button (click)="showAllFormInfo()"> Show All Info </button>
-    <button (click)="orderFormsByClosing()"> Order: Closing </button>
-    <button (click)="orderFormsByOpen()"> Order: Open </button>
-    <button (click)="orderFormsByType()"> Order: Type </button>
-    <button (click)="orderFormsByName()"> Order: Name </button>
-    <button (click)="orderFormsByCompletion()"> Order: Completion </button>
-    <button (click)="sendQueuedForms()"> Send Queued </button>
-    <button (click)="populateWithDummyForms()"> Populate </button>
+    <button (click)="formService.removeAll()"> Remove All </button>
+    <button (click)="formService.showAllFormInfo()"> Show All Info </button>
+    <button (click)="formService.orderFormsByClosing()"> Order: Closing </button>
+    <button (click)="formService.orderFormsByOpen()"> Order: Open </button>
+    <button (click)="formService.orderFormsByType()"> Order: Type </button>
+    <button (click)="formService.orderFormsByName()"> Order: Name </button>
+    <button (click)="formService.orderFormsByCompletion()"> Order: Completion </button>
+    <button (click)="formService.sendQueuedForms()"> Send Queued </button>
 
 
     <ion-list no-lines>
-        <ion-item *ngFor="let form of forms">
+        <ion-item *ngFor="let form of formService.forms">
             <button ion-item (click)="viewForm(form)">
          {{form.label}} 
-         <div style="float:right;">{{getApproximateTimeLeft(form)}}</div>
+         <div style="float:right;">{{formService.getApproximateTimeLeft(form)}}</div>
          <div style="float:right; margin-right: 50px">{{form.questionsAnswered()}} / {{form.numberQuestions()}}</div>
           <div style="float:right; margin-right: 50px">{{form.submissionStatus}}</div>
          

@@ -68,8 +68,6 @@ export class FormViewPage {
     public toastCtrl: ToastController,
     public formService: FormService) {
 
-      console.log(formService.test)
-
 
 
     if (Network.type != "none") {
